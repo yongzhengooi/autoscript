@@ -1,1 +1,1 @@
-For pentest enumeration purpose
+For pentest enumeration and discovery purposes for mass targets
