@@ -57,7 +57,7 @@ while read IP;do
 		echo "$ylw[...] Checking is SSL service is enabled $wht"
 		echo "Note: this only check for https services, might need to refer to ssl.txt for others undetected service"
 		nmap -Pn $IP --script="ssl-enum*" -oN "$nmap_path/$filename/ssl.txt"
-		grep -i "https\|ssl/http\|ssl" "./$nmap_path/$filename/ssl.txt" | awk -F "/" '{print $1}' > sslport.txt
+		grep -i "https\|ssl/http" "./$nmap_path/$filename/ssl.txt" | awk -F "/" '{print $1}' > sslport.txt
 		while read sslport;do
 			echo "$grn[+] SSL port $sslport detected $wht"
 			echo
