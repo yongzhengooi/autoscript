@@ -5,6 +5,7 @@ targetfile="targets.txt"
 nmap_path="./nmap"
 testssl_path="./testssl"
 ssh_path="./ssh"
+smb_path="./smb"
 
 ######### COLOR
 red=$(tput setaf 1) # Red
@@ -57,6 +58,17 @@ check_ssl(){
 	done<"./sslport.txt"
 	rm ./sslport.txt
 }
+
+check_smb(){
+	echo "$ylw[...] Checking if Port SMB open $wht"
+	if (grep -rqi "139/tcp\|445/tcp" "$2"); then
+		echo "$grn[+] Port 135 or 445 detected $wht"
+		if [ ! -d "./smb" ];then
+			mkdir smb
+		fi
+		nmap -Pn -n -p 139,445 --script=smb2-security-mode.nse $1 -oN "$3"
+	fi
+}
 ###### MAIN FUNCTION
 run(){
 	echo
@@ -77,6 +89,11 @@ run(){
 				create_dir "$nmap_path/$filename"
 				create_dir "$nmap_path/$filename/$sub_filename"
 				nmap_normal $subnet "./$nmap_path/$filename/$sub_filename/$sub_filename"
+				
+				### smb part
+				create_dir "$smb_path/$filename"
+				create_dir "$smb_path/$filename/$sub_filename"
+				check_smb $subnet "$nmap_path/$filename/$sub_filename" "$smb_path/$filename/$sub_filename/smb.txt"
 				
 				### ssh part
 				create_dir "$ssh_path/$filename"
@@ -101,8 +118,13 @@ run(){
 			sub_filename=$(echo $1 | tr "." "_" )
 			create_dir "$nmap_path/$filename"
 			nmap_normal $1 "$nmap_path/$filename/$filename"
+			
+			create_dir "$smb_path/$filename"
+			check_smb $1 "$nmap_path/$filename" "$smb_path/$filename/ssh.txt"
+			
 			create_dir "$ssh_path/$filename"
 			check_ssh $1 "$nmap_path/$filename" "$ssh_path/$filename/ssh.txt"
+			
 			create_dir "$testssl_path/$filename"
 			check_ssl $1 "$nmap_path/$filename/ssl.txt" "$testssl_path/$filename"
 		else
@@ -144,9 +166,10 @@ create_dir nmap
 create_dir ssh
 create_dir testssl
 create_dir vuln
-#while read IP; do
-	#run $IP
-#done<$targetfile
+create_dir smb
+while read IP; do
+	run $IP
+done<$targetfile
 
 ######## Summarize vuln scope
 ## This few code is to suppress grep random matching when using 'offered (NOT ok)'
@@ -166,6 +189,7 @@ scope_vuln_from_log "Secure Client-Initiated Renegotiation" "DoS threat" 'secure
 ###NMAP
 scope_vuln_from_nmap "SSH Weak Cryto algo supported" "\-96\|\-cbc\|arcfour" 'weak_cryto_algo_supported.txt'
 scope_vuln_from_nmap "SSH Weak key exchange supported" "\-group1\-\|\-group\-exchange\-sha1\|gss\-\|rsa1024" 'weak_key_exchange_supported.txt'
+scope_vuln_from_nmap "SMB signing enabled but not required" "Message signing enabled but not required" 'smb_signing_not_required.txt'
 ###Clear empty dir
 echo "$grn [+] Removing empty file and directory $wht"
 find . -type f -empty -print -delete;

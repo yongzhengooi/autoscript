@@ -102,7 +102,7 @@ echo
 
 ### Secure Client Initiated Renegotiation 
 echo "$ylw [...] Search for Secure Client-Initiated Renegotiation $wht"
-find . -type f -name "*.log" -exec grep -lF "VULNERABLE (NOT ok)" {} \; 2>/dev/null | awk -F "/" '{print $3}' | tr "_" "." > vuln_renegotiation.txt
+find . -type f -name "*.log" -exec grep -lF "DoS threat" {} \; 2>/dev/null | awk -F "/" '{print $3}' | tr "_" "." > vuln_renegotiation.txt
 echo "$grn [+] Discoved $(cat vuln_renegotiation.txt | wc -l) targets $wht"
 echo
 echo
